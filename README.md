@@ -58,6 +58,7 @@ Android 8.0 이상에서 동작합니다.
 
 - PC에서 `adb install QSearchLauncher-<버전>.apk`
 - Play 스토어 → 프로필 → Play 프로텍트 → 설정에서 "Play 프로텍트로 앱 검사"를 잠시 끄고 설치한 뒤 다시 켜기
+- [Obtainium](https://github.com/ImranR98/Obtainium) 같은 앱 설치 도구로 받기. 앱 추가 화면에 이 저장소 주소(`https://github.com/wuugi/qsearch-launcher`)를 넣으면 최신 릴리스를 받아 설치하고 업데이트도 알려 줍니다. 브라우저로 받은 APK가 아니라서 이 차단이 뜨지 않을 수 있습니다. 기기와 Android 버전에 따라 다를 수 있습니다.
 
 Android 13 이상에서 알림 접근이나 접근성 서비스를 켜려고 할 때 "제한된 설정" 창이 뜨고 켜지지 않을 수 있습니다.
 브라우저나 파일 앱으로 받은 앱에 Android가 거는 제한이고, 앱이 직접 풀 수는 없습니다. 한 번만 아래처럼 허용하면 됩니다.
@@ -165,6 +166,7 @@ when they ask for SMS or notification access, and this app uses both. Install it
 
 - From a PC: `adb install QSearchLauncher-<version>.apk`
 - Play Store → profile → Play Protect → settings, turn off "Scan apps with Play Protect", install, then turn it back on
+- An app installer such as [Obtainium](https://github.com/ImranR98/Obtainium). Add this repository's address (`https://github.com/wuugi/qsearch-launcher`) in its add-app screen and it downloads and installs the latest release, and tells you about updates. Because the APK isn't downloaded through a browser, the block may not appear. This can vary by device and Android version.
 
 On Android 13 and later, turning on notification access or the accessibility service may show a "Restricted setting" dialog and stay off.
 Android applies this to apps installed from a browser or file manager, and the app cannot lift it itself. Allow it once:
