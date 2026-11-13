@@ -19,6 +19,9 @@ import org.json.JSONException
 import org.json.JSONObject
 import org.json.JSONTokener
 
+/** 파일 속 위젯 하나: 위젯을 준 앱의 `패키지/클래스` 이름과, 정해 둔 높이(dp, 없으면 기본 높이). */
+internal data class BackupWidget(val provider: String, val heightDp: Int?)
+
 /**
  * 검증이 끝난 가져오기 계획. 저장소마다 [MutablePreferences] 에 적용할 편집(키 하나를 쓰거나 지우기)의 목록이고,
  * 사용자가 복원을 누르기 전에는 아무것도 실행되지 않는다. 세 숫자는 요약 화면이 보여 준다.
@@ -30,6 +33,10 @@ internal class RestorePlan(
     val favoritesRestored: Int,
     val appsSkipped: Int,
     val unusable: Int,
+    /** 칸(스택)별 복원할 위젯. null 이면 현재 위젯을 그대로 둔다(파일에 필드가 없거나 하나도 못 살릴 때). 빈 목록은 위젯을 모두 비운다는 뜻이다. */
+    val widgets: List<List<BackupWidget>>? = null,
+    /** 위젯을 준 앱이 이 폰에 없어 건너뛴 위젯 수. */
+    val widgetsSkipped: Int = 0,
 )
 
 /**
@@ -39,6 +46,10 @@ internal class RestorePlan(
  * - 그룹 이름은 DataStore 파일 이름, 필드 이름은 DataStore 키 이름 그대로다(저장소 상수의 `.name`).
  * - null 은 "설정한 적 없음"이다. 가져오기는 그 키를 지운다(D-11). 필드가 아예 없으면 "현재 값을 그대로 둔다"(D-04).
  * - 어떤 키가 들어가는지는 [BackupContract] 가 정하고, `BackupCodecTest` 가 이 인코더와 계약이 어긋나면 실패시킨다.
+ * - 형식 번호 정책: 선택 필드나 그룹을 **더하는** 것은 [FORMAT] 을 올리지 않는다 -- 디코더는 아는 이름만 읽고 나머지는 무시하므로
+ *   옛 앱은 새 파일에서 아는 것만 복원한다(거절하지 않는다). 있던 필드의 뜻이나 모양을 **바꿀** 때만 [FORMAT] 을 올린다.
+ * - 위젯 번호는 설치마다 새로 받으므로 `widget_ids` 는 번호가 아니라 위젯을 준 앱의 `패키지/클래스` 이름을 칸(스택)별 배열로 담고,
+ *   `widget_heights` 는 같은 모양으로 dp 정수(기본 높이면 null)를 담는다.
  * - 암호화·압축을 하지 않는다 -- 사용자가 열어서 읽을 수 있는 UTF-8 JSON 이다(오픈소스 신뢰).
  */
 internal object BackupCodec {
@@ -59,6 +70,8 @@ internal object BackupCodec {
         val searchIds: Set<String>,
         /** 이 폰에 설치된 아이콘 팩의 패키지 이름. */
         val iconPackIds: Set<String>,
+        /** 이 폰에 설치된 위젯 제공자의 `패키지/클래스` 이름(ComponentName.flattenToString). */
+        val widgetProviders: Set<String>,
     )
 
     /** 가져오기를 거절하는 네 가지 이유(D-07). */
@@ -70,6 +83,10 @@ internal object BackupCodec {
     }
 
     private val ICON_PACK_SHAPE = Regex("[A-Za-z0-9_.]{1,255}")
+    private val PROVIDER_SHAPE = Regex("[A-Za-z0-9_.]{1,255}/[A-Za-z0-9_.$]{1,255}")
+
+    /** 파일 하나가 띄울 수 있는 시스템 바인딩 창의 상한. 조작된 파일이 창을 끝없이 띄우지 못하게 한다. */
+    const val MAX_WIDGETS = 40
 
     /**
      * 파일을 읽고 **전부 검증한 뒤에야** [RestorePlan] 을 만든다(D-00d) -- 저장소는 여기서 건드리지 않는다.
@@ -80,7 +97,10 @@ internal object BackupCodec {
      * - JSON null 은 그 키를 지운다(D-11). 기본값으로 돌아가는 것이다.
      * - 모양은 맞지만 이 폰이 쓸 수 없는 값(모르는 테마, 범위 밖 열 수, 없는 통화, 쓸 수 없는 진입 조합, 설치되지 않은 아이콘 팩, 모르는 검색 id, 틀린 JSON 형)은
      *   건너뛰고 현재 값을 두며 [RestorePlan.unusable] 로 센다(D-05). 값을 형 변환하지 않는다.
-     * - 표에 없는 필드(제외 키 이름 포함)는 읽지 않는다 -- 조작된 파일이 동의·권한 상태를 심을 수 없다(D-06).
+     * - 표에 없는 필드(권한 질문 여부 같은 제외 키 이름 포함)는 읽지 않는다 -- 조작된 파일이 권한 상태를 심을 수 없다(D-06).
+ *   환율 변환 켜짐과 전역 단축키 의도는 사용자 설정이라 읽는다(접근성 허용 자체는 옮겨지지 않는다).
+ * - 위젯은 설치된 제공자만 살린다. 파일에 항목이 있는데 하나도 못 살리면 현재 위젯을 둔다. 필드가 배열이 아니거나, 칸이 비었거나,
+ *   항목이 `패키지/클래스` 모양이 아니거나, 높이가 양의 정수가 아니거나(그 위젯은 기본 높이), [MAX_WIDGETS] 를 넘으면 쓸 수 없는 값으로 센다.
      * - 즐겨찾기는 파일의 배치로 바꾼다. 앱이 없는 항목은 빈 칸으로 두고 센다(D-02). 파일의 배열이 정말 비었을 때만 빈
      *   칸 키를 쓴다(지우면 옛 `favorite_ids` 이관이 예전 즐겨찾기를 되살린다). 파일에 항목이 있는데 하나도 못 살리면 현재 배치를 둔다.
      * - 목록(숨긴 앱·꺼 둔 검색)은 합치지 않고 바꾼다(D-03). 쉼표가 든 원소는 저장 형식을 깨므로 버린다.
@@ -150,7 +170,10 @@ internal object BackupCodec {
         private var skipped = 0
         private var unusable = 0
 
-        fun build() = RestorePlan(favoritesEdits, homeEdits, searchEdits, restored, skipped, unusable)
+        private var widgets: List<List<BackupWidget>>? = null
+        private var widgetsSkipped = 0
+
+        fun build() = RestorePlan(favoritesEdits, homeEdits, searchEdits, restored, skipped, unusable, widgets, widgetsSkipped)
 
         fun favorites(g: JSONObject) {
             val name = FavoritesStore.KEY_FAVORITE_CELLS.name
@@ -191,6 +214,46 @@ internal object BackupCodec {
             scalar(g, HomeSettingsStore.KEY_WALLPAPER_GESTURE, homeEdits) { it as? Boolean }
             scalar(g, HomeSettingsStore.KEY_NOTIFICATION_GESTURE, homeEdits) { it as? Boolean }
             scalar(g, HomeSettingsStore.KEY_THEME_ID, homeEdits) { v -> (v as? String)?.takeIf { it in env.themeIds } }
+            widgets(g)
+        }
+
+        /** 위젯은 저장소 편집이 아니라 [RestorePlan.widgets] 로 간다 -- 새 번호를 받아야 쓸 수 있다. */
+        private fun widgets(g: JSONObject) {
+            val idsName = HomeSettingsStore.KEY_WIDGET_IDS.name
+            val heightsName = HomeSettingsStore.KEY_WIDGET_HEIGHTS.name
+            if (!g.has(idsName)) return
+            val slots = g.opt(idsName) as? JSONArray ?: run { unusable++; return }
+            val heights = g.opt(heightsName) as? JSONArray
+            if (g.has(heightsName) && heights == null) unusable++
+            val result = mutableListOf<List<BackupWidget>>()
+            var seen = 0
+            for (s in 0 until slots.length()) {
+                val slot = slots.opt(s) as? JSONArray
+                if (slot == null || slot.length() == 0) {
+                    unusable++
+                    continue
+                }
+                val kept = mutableListOf<BackupWidget>()
+                for (i in 0 until slot.length()) {
+                    val provider = (slot.opt(i) as? String)?.takeIf { PROVIDER_SHAPE.matches(it) }
+                    if (provider == null || seen++ >= MAX_WIDGETS) {
+                        unusable++
+                        continue
+                    }
+                    if (provider !in env.widgetProviders) {
+                        widgetsSkipped++
+                        continue
+                    }
+                    val h = (heights?.opt(s) as? JSONArray)?.opt(i)
+                    val dp = (h as? Int)?.takeIf { it > 0 }
+                    if (dp == null && h != null && h !== JSONObject.NULL) unusable++
+                    kept += BackupWidget(provider, dp)
+                }
+                if (kept.isNotEmpty()) result += kept
+            }
+            // 파일에 위젯이 있는데 하나도 못 살리면 현재 위젯을 지우지 않고 둔다(favorites 와 같은 규칙).
+            if (result.isEmpty() && slots.length() > 0) return
+            widgets = result
         }
 
         fun search(g: JSONObject) {
@@ -199,6 +262,8 @@ internal object BackupCodec {
             scalar(g, SearchSettingsStore.KEY_SEARCH_BAR_AT_BOTTOM, searchEdits) { it as? Boolean }
             scalar(g, SearchSettingsStore.KEY_EMPTY_BACKSPACE_HINT, searchEdits) { it as? Boolean }
             scalar(g, SearchSettingsStore.KEY_FX_BASE_CURRENCY, searchEdits) { v -> (v as? String)?.takeIf { it in env.currencyCodes } }
+            scalar(g, SearchSettingsStore.KEY_FX_ENABLED, searchEdits) { it as? Boolean }
+            scalar(g, SearchSettingsStore.KEY_GLOBAL_SHORTCUT_WANTED, searchEdits) { it as? Boolean }
         }
 
         /** 없으면 그대로, null 이면 지우고, [accept] 가 받아들인 값이면 쓰고, 아니면 건너뛰며 센다. 형 변환은 없다. */
@@ -256,7 +321,8 @@ internal object BackupCodec {
     /** 파일 이름 계약이라 문자열 리소스가 아니다. */
     fun fileName(date: LocalDate): String = "qsearch-backup-$date.json"
 
-    fun encode(favorites: Preferences, home: Preferences, search: Preferences): String = JSONObject().apply {
+    /** [widgetProvider] 는 위젯 번호의 제공자 `패키지/클래스` 이름(번호는 파일에 넣지 않는다). 찾지 못하는 번호는 뺀다. */
+    fun encode(favorites: Preferences, home: Preferences, search: Preferences, widgetProvider: (Int) -> String?): String = JSONObject().apply {
         put("app", APP_ID)
         put("format", FORMAT)
         put(BackupContract.Store.FAVORITES.file, JSONObject().apply {
@@ -282,6 +348,7 @@ internal object BackupCodec {
             scalar(home, HomeSettingsStore.KEY_WALLPAPER_GESTURE)
             scalar(home, HomeSettingsStore.KEY_NOTIFICATION_GESTURE)
             scalar(home, HomeSettingsStore.KEY_THEME_ID)
+            widgets(home, widgetProvider)
         })
         put(BackupContract.Store.SEARCH.file, JSONObject().apply {
             scalar(search, SearchSettingsStore.KEY_ENTRY_KEY_CODE)
@@ -290,12 +357,29 @@ internal object BackupCodec {
             scalar(search, SearchSettingsStore.KEY_SEARCH_BAR_AT_BOTTOM)
             scalar(search, SearchSettingsStore.KEY_EMPTY_BACKSPACE_HINT)
             scalar(search, SearchSettingsStore.KEY_FX_BASE_CURRENCY)
+            scalar(search, SearchSettingsStore.KEY_FX_ENABLED)
+            scalar(search, SearchSettingsStore.KEY_GLOBAL_SHORTCUT_WANTED)
         })
     }.toString(2)
 
     /** 없는 값은 [JSONObject.NULL] 로 적는다 -- `put(name, null)` 은 필드를 조용히 지워 D-11 이 깨진다. */
     private inline fun <reified T : Any> JSONObject.scalar(prefs: Preferences, key: Preferences.Key<T>) {
         put(key.name, prefs.valueOrNull(key) ?: JSONObject.NULL)
+    }
+
+    /** 위젯 번호를 제공자 이름으로 바꿔 칸별 배열 둘(이름, 높이)로 적는다. 없으면 빈 배열. */
+    private fun JSONObject.widgets(prefs: Preferences, provider: (Int) -> String?) {
+        val heights = HomeSettingsStore.decodeWidgetHeights(prefs.valueOrNull(HomeSettingsStore.KEY_WIDGET_HEIGHTS))
+        val names = JSONArray()
+        val dps = JSONArray()
+        for (slot in HomeSettingsStore.decodeWidgetSlots(prefs.valueOrNull(HomeSettingsStore.KEY_WIDGET_IDS))) {
+            val resolved = slot.mapNotNull { id -> provider(id)?.let { it to heights[id] } }
+            if (resolved.isEmpty()) continue
+            names.put(JSONArray(resolved.map { it.first }))
+            dps.put(JSONArray().also { a -> resolved.forEach { a.put(it.second ?: JSONObject.NULL) } })
+        }
+        put(HomeSettingsStore.KEY_WIDGET_IDS.name, names)
+        put(HomeSettingsStore.KEY_WIDGET_HEIGHTS.name, dps)
     }
 
     /** 쉼표로 이어 저장한 id 목록. 없으면 빈 배열(null 이 아니다). */
