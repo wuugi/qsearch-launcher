@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 네트워크 권한을 선언하지 않는다 — 이 페이즈에는 원격 통신이 존재하지 않는다. -->
+
+    <!-- FallbackActivity(D-01)의 PackageManager.queryIntentActivities 조회가 API 30+
+         패키지 가시성 필터를 통과하도록 하는 최소 선언 — 런처 가능 앱으로 조회 범위를
+         한정한다(전체 패키지 조회 권한은 과잉이므로 쓰지 않는다). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- WDGT-01: WidgetHostController.installedProviders()가 다른 앱의 위젯 제공자를
+             조회하려면 API 30+ 패키지 가시성 필터를 통과해야 한다. 위 LAUNCHER 항목과 같은
+             성질의 **가시성 선언이지 권한 선언이 아니다** — 위젯 바인딩 권한
+             (BIND_APPWIDGET)은 서드파티 런처에 부여되지 않는 시스템 권한이라 선언하지
+             않고, 바인딩은 사용자 확인 화면에 전량 위임한다(T-5.1-13, 04의 ACTION_DELETE
+             위임과 같은 원칙). -->
+        <intent>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent>
+        <!-- 웹 폴백 행: Play 스토어 행의 아이콘·설치 여부를 본다. -->
+        <package android:name="com.android.vending" />
+        <!-- 구글 검색 행: 기본 브라우저 아이콘을 찾기 위한 가시성 선언(권한이 아니다). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
+    <!-- HOME-05: 길게 누르기 메뉴의 "삭제"가 Intent.ACTION_DELETE로 시스템 확인
+         화면을 띄우려면 필요하다. 이 선언이 없으면 targetSdk 36에서 인텐트가 예외
+         없이 반환되지만 삭제 확인 다이얼로그가 조용히 뜨지 않는다(04-RESEARCH.md
+         Pitfall 3). normal permission이라 설치 시 자동 부여되고 사용자에게 동의
+         화면이 뜨지 않으므로 HOME-07(무권한 첫 실행에서도 정상 동작)과 충돌하지
+         않는다. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
+    <!-- ICON-03: 액티비티(홈 앱 선택 화면이 그리는 MainActivity)는 자기 아이콘을 선언하지 않아 이 적응형 아이콘을
+         상속한다. roundIcon도 같은 리소스 - 원 마스크는 런처가 씌운다. -->
+    <application
+        android:name=".App"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.Launcher">
+
+        <!-- LAYT-04: targetSdk 36 + setDecorFitsSystemWindows(window, false)(edge-to-edge)
+             조합에서는 프레임워크가 더 이상 IME insets를 루트 뷰에 자동 패딩하지 않는다
+             (02-RESEARCH.md Pitfall 4) — 앱이 WindowInsetsCompat.Type.ime()를 직접
+             소비해야 하므로 adjustResize + Modifier.imePadding()으로 배선한다.
+             07 G-07-R2-2 — BT 키보드가 붙고 떨어질 때 keyboard·keyboardHidden·navigation이 함께
+             바뀐다(실기기 wm_relaunch_resume_activity changes=0x70); navigation이 빠져 홈이
+             재생성됐다. -->
+        <!-- D-08: 홈 앱 선택 화면과 기본 앱 설정의 홈 목록은 이 액티비티 라벨을 쓴다 - 좁은 자리라 짧은 이름. -->
+        <!-- screenOrientation=nosensor: 가로 전체화면 앱(유튜브 영상)에서 홈으로 나오면 홈이 가로로 한 번 배치됐다가 세로로
+             돌아오며 위젯 자리가 접혔다 펴지고 위젯이 크기 통지를 두 번 받아 홈 전체가 새로 그려져 보였다(2026-11-12 실기기
+             motorola edge 70). 홈은 기기의 기본 방향에 고정한다(Launcher3의 홈 회전 꺼짐과 같은 값).
+             shortcut: 가로 홈을 못 쓴다, 가로 키보드 슬라이더 기기를 지원할 때 설정 토글로 푼다. -->
+        <!-- resumeWhilePausing: 홈으로 돌아올 때 시스템이 앞 앱의 onPause를 기다리지 않고 홈을 곧바로 resume한다
+             (Launcher3·Kvaesitso·Lawnchair가 모두 홈 액티비티에 같은 값을 선언한다). 이 값이 없을 때
+             wm_new_intent -> wm_on_restart_called가 유튜브 PiP 진입 경로에서 102~196ms, 설정 앱에서 약 45ms 걸렸고
+             두 런처는 12~18ms였다 — PiP로 들어가는 앱의 느린 onPause만큼 홈이 늦게 떴다(2026-11-13 에뮬레이터
+             titan2_sim API 36, logcat -b events). -->
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name_short"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:clearTaskOnLaunch="true"
+            android:stateNotNeeded="true"
+            android:resumeWhilePausing="true"
+            android:screenOrientation="nosensor"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".FallbackActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.Fallback" />
+
+        <!-- Phase 6(SET-01) 설정 화면. 이 앱 자신만 명시적 Intent로 띄운다 — 외부
+             트리거가 없으므로 export하지 않는다(T-06-01).
+             07 G-07-R2-2 — BT 키보드 연결·해제의 0x70 config 변경에 재생성되면 진행 중이던
+             단축키 캡처가 사라졌다(2026-10-03 logcat) — 홈과 같은 세 비트를 직접 처리한다. -->
+        <activity
+            android:name=".settings.SettingsActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation"
+            android:exported="false"
+            android:theme="@style/Theme.Settings" />
+
+        <!-- HOME-06: 읽지 않은 알림 점. 이 선언이 없으면 시스템이 바인드하지 않는다.
+             아래 android:permission 값은 사용자가 시스템 설정에서 명시적으로 허용해야
+             하는 특수 권한이다 — 기본값은 꺼짐이고, 그 상태에서도 홈·검색·즐겨찾기가
+             전부 정상 동작한다(HOME-07, 04-05-PLAN.md D-11). -->
+        <service
+            android:name=".notification.UnreadDotListenerService"
+            android:exported="false"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>

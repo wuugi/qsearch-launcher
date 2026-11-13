@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 저장소 유일의 INTERNET 선언이다(FX-07 감사 지점). 이 권한을 쓰는 코드는 FxClient.kt 하나이고,
+         하는 일은 설정 → 환율 변환을 켰을 때만 보내는 고정 주소 GET 요청 하나(입력 내용 없음)다. 기본은 꺼짐.
+         앱(:app)이 이 모듈에 의존하는 순간 매니페스트 병합으로 권한이 앱에 들어간다 — 앱 자기 매니페스트에는
+         선언하지 않는다. `./gradlew checkSmsIsolation`의 규칙 D·G가 이 출처를 빌드에서 강제한다. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+</manifest>

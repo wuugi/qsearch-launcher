@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- SMS 권한의 유일한 선언처다(SMS-04 감사 지점). 앱 매니페스트에는 READ_SMS가 없고,
+         앱(:app)이 이 모듈에 의존하는 순간 매니페스트 병합으로 앱에 들어간다. 이 모듈에는
+         INTERNET 권한도 네트워크 코드도 없고, 환율 모듈(:provider-fx)과 서로 의존하지 않는다 — 문자 내용이
+         네트워크 코드에 닿지 않는다(앱 전체의 INTERNET은 환율용, docs/PRIVACY.md "인터넷: 환율 조회").
+         `./gradlew checkSmsIsolation`이 이 두 사실을 빌드에서 강제한다. -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+
+    <!-- 선택 권한(D-07) — 검색 결과 행에 번호 대신 연락처 이름을 보여주는 데에만 쓴다. 거부해도 검색은
+         번호로 똑같이 동작한다. 요청은 인라인 행(08-04)에서 READ_SMS와 함께, 사용처 설명은 docs/PRIVACY.md(08-06).
+         조회 코드도 이 모듈 안에만 있다(SmsSearcher). -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <!-- 기본 문자 앱 조회(08-02)용 패키지 가시성 선언 — 권한이 아니다(RESEARCH Pitfall 4). -->
+    <queries>
+        <intent>
+            <action android:name="android.provider.Telephony.SMS_DELIVER" />
+        </intent>
+    </queries>
+
+</manifest>

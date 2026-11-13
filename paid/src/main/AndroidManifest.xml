@@ -1,0 +1,62 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 홈의 두 손가락 아래 스와이프로 알림창을 내린다. normal permission이라 설치 시 자동 부여된다. -->
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+
+    <!-- 설정 '아이콘 팩': 스토어 아이콘 팩이 선언하는 표준 액션. 가시성 선언이지 권한이 아니다. -->
+    <queries>
+        <intent><action android:name="org.adw.launcher.THEMES" /></intent>
+        <intent><action android:name="com.novalauncher.THEME" /></intent>
+        <intent><action android:name="com.teslacoilsw.launcher.THEME" /></intent>
+        <intent><action android:name="com.gau.go.launcherex.theme" /></intent>
+    </queries>
+
+    <application>
+        <!-- Phase 9(D-02) 다른 앱 위 검색창 화면. 문자 본문까지 보여 줄 수 있어 export하지 않는다 - 이 앱 자신의
+             명시적 Intent(SearchActivity.launch)만 띄운다(T-09-01). intent-filter·잠금 화면 표시·화면 켜기·다른 앱 위
+             창 권한은 선언하지 않는다(T-09-02).
+             taskAffinity="" + singleTask: 홈 task와 분리된 자기 task라 닫으면 원래 앱이 그대로 앞에 있다
+             (MainActivity의 clearTaskOnLaunch를 쓰지 않는 이유 - PITFALLS 4). excludeFromRecents: 최근 앱에 안 남는다.
+             configChanges는 MainActivity와 같은 집합 - BT 키보드 연결·회전에 재생성되지 않는다. -->
+        <activity
+            android:name=".searchui.SearchActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Search" />
+
+        <!-- Phase 10(D-01) 빠른 설정 타일. exported=true인 이유: SystemUI가 바인드해야 한다. 시스템 서명 권한
+             BIND_QUICK_SETTINGS_TILE이 바인드 주체를 SystemUI로 묶으므로 다른 앱이 클릭을 흉내 낼 수 없다(T-10-05).
+             android:process는 두지 않는다 - 별도 프로세스는 상주 메모리를 두 배로 하고 DataStore 단일 프로세스 가정을 깬다(PITFALLS 3).
+             라벨은 좁은 자리라 짧은 이름. 컴포넌트 이름은 사용자의 빠른 설정 배치에 저장되므로 바꾸지 않는다. -->
+        <service
+            android:name=".global.SearchTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_qs_tile"
+            android:label="@string/app_name_short"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- Phase 10(D-01, D-05) 단축키용 접근성 서비스. exported=true인 이유: 시스템이 바인드해야 한다. 시스템 서명 권한
+             BIND_ACCESSIBILITY_SERVICE가 바인드 주체를 시스템으로 묶는다(T-10-05). 사용자가 설정에서 직접 켜야 하고 앱이
+             스스로 켤 수 없다. 서비스 이름은 Settings.Secure의 켜짐 목록에 저장되므로 바꾸지 않는다.
+             android:process는 두지 않는다(PITFALLS 3). 라벨은 넓은 자리라 전체 이름. -->
+        <service
+            android:name=".global.GlobalShortcutService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/global_shortcut_service" />
+        </service>
+    </application>
+</manifest>

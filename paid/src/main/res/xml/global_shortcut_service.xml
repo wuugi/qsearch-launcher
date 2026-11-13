@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- D-05: 이 서비스는 키 필터만 요청한다: 화면 내용을 읽지 않고(canRetrieveWindowContent=false), 이벤트 타입도 선언하지 않는다
+     (UI 이벤트를 받지 않는다). 설정 액티비티 속성·접근성 도구(isAccessibilityTool) 선언도 두지 않는다: 접근성 도구가
+     아닌 앱이 그렇게 주장하면 정직하지 않다(PITFALLS 8).
+     feedbackGeneric을 두는 이유: 10-04의 켜짐 판정 getEnabledAccessibilityServiceList(FEEDBACK_ALL_MASK)가 피드백 비트가
+     0인 서비스를 찾지 못한다.
+     실기기에서 키가 오지 않을 때만 빈 핸들러용 창 상태 변경 이벤트 타입 하나를 허용한다(D-05, 10-01 Task 3 대체 경로). -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagRequestFilterKeyEvents"
+    android:canRequestFilterKeyEvents="true"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/global_shortcut_service_desc" />
