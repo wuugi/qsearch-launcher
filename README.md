@@ -78,7 +78,7 @@ Android 8.0 이상에서 동작합니다.
 
 ### 공개한 코드
 
-앱 전체 소스는 공개하지 않습니다. 대신 위의 약속을 직접 확인할 수 있도록, 데이터를 다루는 코드만 이 저장소에 올렸습니다.
+앱 전체 소스는 공개하지 않습니다. 대신 위 권한 표에 적은 내용을 코드로 확인할 수 있도록, 데이터를 다루는 코드만 이 저장소에 올렸습니다.
 
 | 확인할 것 | 코드 |
 |---|---|
@@ -178,7 +178,7 @@ Details are in [docs/PRIVACY.md](docs/PRIVACY.md) (Korean).
 
 ### Published code
 
-The app's full source is not published. So that you can check the promises above yourself, this repository holds the code that handles your data.
+The app's full source is not published. This repository holds the code that handles your data, so you can check the permission table above against it.
 
 | What to check | Code |
 |---|---|
