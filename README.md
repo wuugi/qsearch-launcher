@@ -36,7 +36,7 @@ macOS Spotlight처럼 단축키로 검색창을 열고, 글자를 치고, Enter�
 - 읽지 않은 앱에 대한 알림을 점으로 표기합니다. (선택 권한이 필요합니다.)
 - 제스처: 배경화면만 보기, 빈 곳 두 번 탭으로 화면 잠금, 두 손가락으로 아래로 밀어 알림창 내리기.
 - 테마는 머티리얼(Android 12 이상은 시스템 색), 글래스, 클래식 쿼티 중에서 고릅니다. 아이콘 팩도 적용할 수 있습니다.
-- 즐겨찾기, 숨긴 앱, 설정을 파일 하나로 내보내고 되돌릴 수 있습니다.
+- 즐겨찾기, 숨긴 앱, 위젯 배치, 설정을 파일 하나로 내보내고 되돌릴 수 있습니다. (위젯은 복원할 때 위젯마다 시스템 확인을 거치며, 위젯 안의 설정은 옮겨지지 않습니다.)
 - 화면 문구는 시스템 언어를 따릅니다. 한국어, 영어, 일본어를 지원하고 그 밖의 언어는 영어로 나옵니다.
 
 앱 서랍
@@ -66,6 +66,8 @@ Android 13 이상에서 알림 접근이나 접근성 서비스를 켜려고 할
 1. Q Search 앱 정보를 엽니다(설정 → 앱 → Q Search).
 2. 오른쪽 위 ⋮ 메뉴에서 "제한된 설정 허용"을 누릅니다. 이 메뉴는 한 번 막힌 뒤에야 나타납니다.
 3. 알림 접근이나 접근성 서비스를 다시 켭니다.
+
+앱 설정의 권한 항목에서 알림 접근이 꺼져 있으면 이 안내가 함께 나오고, 누르면 앱 정보 화면으로 바로 이동합니다.
 
 ### 권한과 개인정보
 
@@ -145,7 +147,7 @@ Home
 - A dot on apps with unread notifications.
 - Gestures: wallpaper only, double-tap to lock the screen, two-finger swipe down for the notification shade.
 - Material (system colours on Android 12+), Glass and Classic QWERTY themes. Icon packs are supported.
-- Export favorites, hidden apps and settings to one file and restore them.
+- Export favorites, hidden apps, the widget layout and settings to one file and restore them. (Each widget goes through a system confirmation on restore, and settings inside a widget are not carried over.)
 - The UI follows the system language: English, Korean or Japanese (anything else falls back to English).
 
 App drawer
@@ -174,6 +176,8 @@ Android applies this to apps installed from a browser or file manager, and the a
 1. Open Q Search's app info (Settings → Apps → Q Search).
 2. Tap the ⋮ menu at the top right and choose "Allow restricted settings". The menu appears only after a setting has been blocked once.
 3. Turn notification access or the accessibility service on again.
+
+When notification access is off, the permissions section in the app's settings shows these steps too, and tapping it opens app info.
 
 ### Permissions and privacy
 
