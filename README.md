@@ -110,6 +110,14 @@ Android 13 이상에서 알림 접근이나 접근성 서비스를 켜려고 할
 
 홈이 계속 꺼지는 등 문제가 생겼을 때 원래 런처로 돌아가는 방법은 [docs/RECOVERY.md](docs/RECOVERY.md)에 있습니다.
 
+### 후원
+
+이 런처는 판매하지 않습니다. 마음에 드셨다면 PayPal로 1~2달러 정도 후원해 주시면 큰 힘이 됩니다.
+
+- [PayPal로 $1 후원](https://paypal.me/wuugiboogi/1USD) · [PayPal로 $2 후원](https://paypal.me/wuugiboogi/2USD)
+
+후원하지 않아도 모든 기능을 똑같이 쓸 수 있습니다.
+
 ### 문의
 
 버그와 제안은 이슈로 받습니다. 풀 리퀘스트는 받지 않습니다.
@@ -219,6 +227,14 @@ This repository cannot build the app on its own. You can check the real permissi
 - Not yet tested on a real Titan 2. Tested on emulators and a Motorola edge 70 (Android 16).
 
 If the launcher keeps failing and you need your old launcher back, see [docs/RECOVERY.md](docs/RECOVERY.md) (Korean).
+
+### Donate
+
+This launcher is not sold. If you like it, a $1 or $2 tip through PayPal helps a lot.
+
+- [Tip $1 with PayPal](https://paypal.me/wuugiboogi/1USD) · [Tip $2 with PayPal](https://paypal.me/wuugiboogi/2USD)
+
+Every feature works the same whether you donate or not.
 
 ### Feedback
 

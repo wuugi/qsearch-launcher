@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -133,6 +134,16 @@ class GlobalShortcutService : AccessibilityService() {
         // 바인드된 동안의 서비스 자신 -- onUnbind·onDestroy에서 지운다. 서비스라 Activity를 붙잡지 않는다.
         @SuppressLint("StaticFieldLeak")
         private var connected: GlobalShortcutService? = null
+            set(value) {
+                field = value
+                bound.value = value != null
+            }
+
+        /**
+         * 이 프로세스에서 서비스가 바인드돼 있는가. 재부팅 직후엔 홈이 첫 잠금 해제 때 먼저 뜨고 시스템이 서비스를 조금 뒤에 바인드해서,
+         * 홈이 ON_RESUME에서 한 번 물은 값만으론 '꺼져 있음' 안내가 남는다 -- 연결되는 순간 홈이 이 값으로 안내를 거둔다.
+         */
+        val bound = MutableStateFlow(false)
 
         /**
          * 시스템 동작 하나를 부탁한다(화면 잠금, 알림창). 추가 권한 선언이 필요 없고 화면 내용을 읽지 않는다.
