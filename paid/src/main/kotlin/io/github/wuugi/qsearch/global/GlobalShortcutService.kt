@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
 import android.view.KeyEvent
+import io.github.wuugi.qsearch.search.KeyCombo
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import io.github.wuugi.qsearch.App
@@ -111,7 +112,7 @@ class GlobalShortcutService : AccessibilityService() {
             metaState = event.metaState,
             unicodeChar = if (armed) event.unicodeChar else 0,
             eventTime = event.eventTime,
-            passThroughKey = armed && (KeyEvent.isModifierKey(keyCode) || event.isSystem),
+            passThroughKey = armed && (KeyCombo.isModifierKey(keyCode) || event.isSystem),
             isEntryCombo = app.searchController.matchesEntry(event),
             late = armed && SystemClock.uptimeMillis() - event.eventTime >= GlobalKeyGate.LATE_KEY_MS,
         )
