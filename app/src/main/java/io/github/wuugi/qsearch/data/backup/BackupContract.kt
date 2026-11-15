@@ -34,7 +34,7 @@ object BackupContract {
     }
 
     /** 키를 백업에서 뺀 이유. */
-    enum class Why { LEGACY, PERMISSION_STATE, USAGE_HISTORY, CACHE, SAFETY_BREAKER }
+    enum class Why { LEGACY, PERMISSION_STATE, USAGE_HISTORY, CACHE, SAFETY_BREAKER, ONBOARDING_STATE }
 
     val included: Map<Store, Set<String>> = mapOf(
         Store.FAVORITES to setOf(
@@ -75,6 +75,7 @@ object BackupContract {
         ),
         Store.HOME to mapOf(
             HomeSettingsStore.KEY_NOTIFICATION_PROMPT_TAPPED.name to Why.PERMISSION_STATE,
+            HomeSettingsStore.KEY_ONBOARDING_SEEN.name to Why.ONBOARDING_STATE,
         ),
         Store.SEARCH to mapOf(
             SearchSettingsStore.KEY_SMS_PROMPT_DECLINED.name to Why.PERMISSION_STATE,
