@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.provider.ContactsContract
 import android.provider.Telephony
 
 /**
@@ -33,9 +34,22 @@ object SmsAccess {
     fun userDeclinedSms(activity: Activity): Boolean =
         activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_SMS)
 
-    /** 연락처 이름 표시용 선택 권한(D-07) — 매 호출 시스템에 묻는다. */
+    /** 연락처 검색 권한이자 문자 결과 이름 표시(D-03) — 매 호출 시스템에 묻는다. */
     fun hasContacts(context: Context): Boolean =
         context.checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * '연락처 검색 켜기' 행이 요청하는 권한 하나(Phase 18, D-02). 호출부는 그 행을 **선택한 순간에만** 이것을
+     * launcher에 넘긴다 -- 첫 실행·앱 시작·홈 표시 요청 금지.
+     */
+    val CONTACTS_PERMISSION: String = Manifest.permission.READ_CONTACTS
+
+    /**
+     * [userDeclinedSms]와 같은 계약 -- 권한 요청 결과 콜백 **직후에만** 부른다. 참 = 사용자가 READ_CONTACTS
+     * 대화상자를 보고 거부했다. 거짓 = 시스템이 묻지 않고 막았다. 매번 시스템에 묻고 저장하지 않는다(04 D-12).
+     */
+    fun userDeclinedContacts(activity: Activity): Boolean =
+        activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)
 
     /**
      * 기본 문자 앱 패키지(없으면 null) — 결과 행 아이콘용(D-09). 모듈 매니페스트의 SMS_DELIVER `<queries>`가
@@ -57,6 +71,21 @@ object SmsAccess {
             val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + Uri.encode(dialable)))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
+        }.isSuccess
+    }
+
+    /**
+     * [lookupUri]의 연락처를 연락처 앱에서 연다 — 열기만 하고 전화는 걸지 않는다(D-04). 주소가
+     * `ContactsContract.Contacts.CONTENT_LOOKUP_URI` 접두로 시작하지 않으면 인텐트를 만들지 않고 false다 —
+     * 암시적 인텐트로 가는 URI의 신뢰 경계(T-18-03). `resolveActivity` 사전 확인은 하지 않는다
+     * ([openConversation]과 같은 이유, 03 Pitfall 7).
+     */
+    fun openContact(context: Context, lookupUri: String): Boolean {
+        if (!lookupUri.startsWith(ContactsContract.Contacts.CONTENT_LOOKUP_URI.toString() + "/")) return false
+        return runCatching {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(lookupUri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }.isSuccess
     }
 }

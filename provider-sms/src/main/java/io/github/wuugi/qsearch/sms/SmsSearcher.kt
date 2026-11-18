@@ -46,32 +46,6 @@ class SmsSearcher(
         return if (withNames) attachNames(filled) else filled
     }
 
-    /**
-     * 블로킹 provider 조회를 IO에서 돌리고, 코루틴이 취소되면 [CancellationSignal]로 provider 쪽 실행을 끊는다.
-     * 끊긴 쿼리가 던지는 [OperationCanceledException]은 [CancellationException]으로 바꿔 조용한 취소로 접는다.
-     * 감시 자식은 UNDISPATCHED로 바로 대기에 들어가 취소 전에 시작하지 못하는 틈이 없다.
-     *
-     * ponytail: 실제 SmsProvider가 5인자 query만 재정의했다면 신호가 무시된다 — 그때도 낡은 조회는 IO에서
-     * 끝까지 돌 뿐이고 `flatMapLatest`가 결과를 버리며 SMS 디바운스가 겹침을 줄인다(실기기 확인 항목).
-     */
-    private suspend fun <T> cancellable(block: (CancellationSignal) -> T): T = withContext(Dispatchers.IO) {
-        val signal = CancellationSignal()
-        val watcher = launch(start = CoroutineStart.UNDISPATCHED) {
-            try {
-                awaitCancellation()
-            } finally {
-                signal.cancel()
-            }
-        }
-        try {
-            block(signal)
-        } catch (e: OperationCanceledException) {
-            throw CancellationException("provider query canceled").apply { initCause(e) }
-        } finally {
-            watcher.cancel()
-        }
-    }
-
     private suspend fun querySms(pattern: String, limit: Int): List<SmsHit> = cancellable { signal ->
         val hits = ArrayList<SmsHit>(limit)
         resolver.query(
@@ -200,5 +174,31 @@ class SmsSearcher(
             }
         }
         return hits.map { h -> h.copy(name = h.address?.let { names[it] }) }
+    }
+}
+
+/**
+ * 블로킹 provider 조회를 IO에서 돌리고, 코루틴이 취소되면 [CancellationSignal]로 provider 쪽 실행을 끊는다.
+ * 끊긴 쿼리가 던지는 [OperationCanceledException]은 [CancellationException]으로 바꿔 조용한 취소로 접는다.
+ * 감시 자식은 UNDISPATCHED로 바로 대기에 들어가 취소 전에 시작하지 못하는 틈이 없다.
+ *
+ * ponytail: 실제 SmsProvider가 5인자 query만 재정의했다면 신호가 무시된다 — 그때도 낡은 조회는 IO에서
+ * 끝까지 돌 뿐이고 `flatMapLatest`가 결과를 버리며 SMS 디바운스가 겹침을 줄인다(실기기 확인 항목).
+ */
+internal suspend fun <T> cancellable(block: (CancellationSignal) -> T): T = withContext(Dispatchers.IO) {
+    val signal = CancellationSignal()
+    val watcher = launch(start = CoroutineStart.UNDISPATCHED) {
+        try {
+            awaitCancellation()
+        } finally {
+            signal.cancel()
+        }
+    }
+    try {
+        block(signal)
+    } catch (e: OperationCanceledException) {
+        throw CancellationException("provider query canceled").apply { initCause(e) }
+    } finally {
+        watcher.cancel()
     }
 }

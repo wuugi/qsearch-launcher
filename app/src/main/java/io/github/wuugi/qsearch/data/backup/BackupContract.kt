@@ -79,6 +79,7 @@ object BackupContract {
         ),
         Store.SEARCH to mapOf(
             SearchSettingsStore.KEY_SMS_PROMPT_DECLINED.name to Why.PERMISSION_STATE,
+            SearchSettingsStore.KEY_CONTACTS_PROMPT_DECLINED.name to Why.PERMISSION_STATE,
         ),
         Store.USAGE to mapOf(
             UsageStore.KEY_USAGE.name to Why.USAGE_HISTORY,

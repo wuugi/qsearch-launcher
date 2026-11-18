@@ -13,7 +13,7 @@
 
 ## 한국어
 
-macOS Spotlight처럼 단축키로 검색창을 열고, 글자를 치고, Enter를 누르면 됩니다. 앱 실행, 계산, 단위 변환, 환율, 문자 검색, 웹 검색을 한 입력창에서 합니다.
+macOS Spotlight처럼 단축키로 검색창을 열고, 글자를 치고, Enter를 누르면 됩니다. 앱 실행, 계산, 단위 변환, 환율, 문자·연락처 검색, 웹 검색을 한 입력창에서 합니다.
 
 키보드가 없는 폰에서도 터치로 다 쓸 수 있습니다. Titan 2 같은 1:1 정사각 화면과 일반 폰 화면 양쪽에 맞게 배치됩니다.
 모든 기능이 무료입니다.
@@ -26,6 +26,7 @@ macOS Spotlight처럼 단축키로 검색창을 열고, 글자를 치고, Enter�
 - `1234*56` 같은 계산과 `3kg to lb` 같은 단위 변환은 치는 동안 답이 나옵니다.
 - `100usd`, `$100`, `1000엔`, `100usd to krw`처럼 치면 통화를 바꿔 줍니다. 원화·달러·엔화 외에 통화 12개를 지원하고, 기준 통화를 고를 수 있습니다. 기본은 꺼져 있어서 설정에서 켜야 합니다.
 - 문자 본문을 찾아서 그 대화로 바로 갑니다. 권한을 줘야 하는 선택 기능입니다.
+- 이름(초성 포함)이나 번호로 연락처를 찾아 연락처 앱에서 엽니다. 권한을 줘야 하는 선택 기능입니다.
 - 결과 맨 아래에 Google과 Play 스토어 검색이 노출됩니다. 일치하는 결과가 없으면 Enter를 눌렀을 때 바로 Google에서 검색합니다.
 - 검색창은 화면 위나 아래에 둘 수 있습니다. 빈 검색창은 백스페이스를 두 번 눌러야 닫힙니다. (종료에 대한 안내 노출은 설정에서 on off 할 수 있습니다.)
 
@@ -48,13 +49,12 @@ macOS Spotlight처럼 단축키로 검색창을 열고, 글자를 치고, Enter�
 Android 8.0 이상에서 동작합니다.
 
 1. [Releases](../../releases)에서 APK를 받아 설치합니다.
-2. 홈 버튼을 누르고 Q Search를 기본 홈으로 고릅니다. 바꾼 뒤에는 한 번 재부팅해 주세요.
-3. 안 하면 뒤로가기 제스처가 잠깐 멈출 수 있습니다.
-4. 처음 열면 검색 단축키를 정하라고 나옵니다. 키보드가 없으면 건너뛰면 됩니다.
-5. 다른 앱 위에서도 단축키로 검색창을 열려면 설정 → 다른 앱에서 열기 → 단축키로 열기를 켜고 안내대로 접근성 서비스를 켭니다. 안 켜도 홈 안의 검색은 그대로 됩니다.
+2. 홈 버튼을 누르고 Q Search를 기본 홈으로 고릅니다. 바꾼 뒤에는 한 번 재부팅해 주세요. 안 하면 뒤로가기 제스처가 잠깐 멈출 수 있습니다.
+3. 처음 열면 검색 단축키를 정하라고 나옵니다. 키보드가 없으면 건너뛰면 됩니다.
+4. 다른 앱 위에서도 단축키로 검색창을 열려면 설정 → 다른 앱에서 열기 → 단축키로 열기를 켜고 안내대로 접근성 서비스를 켭니다. 안 켜도 홈 안의 검색은 그대로 됩니다.
 
 설치할 때 "기기 보호를 위해 앱 차단됨"이 뜰 수 있습니다. 이럴 때는 아래 둘 중 하나로 설치합니다.
-(바이러스가 아니니 안심해 주세요. 문자 검색 등의 접근성 권한으로 발생합니다.)
+(바이러스가 아니니 안심해 주세요. 브라우저나 파일 앱으로 받은 앱이 문자·알림 접근을 요청하면 Play 프로텍트가 이렇게 막습니다.)
 
 - PC에서 `adb install QSearchLauncher-<버전>.apk`
 - Play 스토어 → 프로필 → Play 프로텍트 → 설정에서 "Play 프로텍트로 앱 검사"를 잠시 끄고 설치한 뒤 다시 켜기
@@ -76,7 +76,7 @@ Android 13 이상에서 알림 접근이나 접근성 서비스를 켜려고 할
 
 | 권한 | 용도 |
 |---|---|
-| 문자, 연락처 읽기 | 문자 본문 검색과 보낸 사람 이름 표시. 검색할 때만 읽고 저장하지 않습니다. |
+| 문자, 연락처 읽기 | 문자 본문 검색, 보낸 사람 이름 표시, 이름·번호로 연락처 검색. 검색할 때만 읽고 저장하지 않습니다. 연락처를 고르면 연락처 앱을 열 뿐 전화를 걸지 않습니다. |
 | 알림 접근 | 즐겨찾기의 알림 점. 어느 앱에 알림이 있는지만 봅니다. |
 | 접근성 서비스 | 다른 앱 위에서 검색 단축키 받기. 키 입력을 단축키와 비교만 하고 저장하거나 보내지 않으며, 화면 내용은 읽지 않습니다. 설정에서 직접 켜야 동작합니다. |
 | 인터넷 | 환율 데이터 받기. 환율 변환을 켰을 때만, 하루 한 번, 정해진 주소 하나로 요청합니다. 입력한 내용은 보내지 않습니다. |
@@ -92,7 +92,7 @@ Android 13 이상에서 알림 접근이나 접근성 서비스를 켜려고 할
 
 | 확인할 것 | 코드 |
 |---|---|
-| 문자와 연락처를 어떻게 읽고, 저장하지 않는지 | [`provider-sms/`](provider-sms), [`SmsSearchProvider.kt`](app/src/github/java/io/github/wuugi/qsearch/search/providers/SmsSearchProvider.kt) |
+| 문자와 연락처를 어떻게 읽고, 저장하지 않는지 | [`provider-sms/`](provider-sms), [`SmsSearchProvider.kt`](app/src/github/java/io/github/wuugi/qsearch/search/providers/SmsSearchProvider.kt), [`ContactsSearchProvider.kt`](app/src/github/java/io/github/wuugi/qsearch/search/providers/ContactsSearchProvider.kt) |
 | 네트워크를 쓰는 곳이 환율 요청 하나뿐인지 | [`provider-fx/`](provider-fx), [`FxRepository.kt`](app/src/main/java/io/github/wuugi/qsearch/data/fx/FxRepository.kt) |
 | 알림에서 무엇을 보는지 | [`UnreadDotListenerService.kt`](app/src/main/java/io/github/wuugi/qsearch/notification/UnreadDotListenerService.kt) |
 | 접근성 서비스가 키 입력으로 무엇을 하는지 | [`paid/.../global/`](paid/src/main/kotlin/io/github/wuugi/qsearch/global), [서비스 선언](paid/src/main/res/xml) |
@@ -106,7 +106,7 @@ Android 13 이상에서 알림 접근이나 접근성 서비스를 켜려고 할
 - 홈 제스처로 앱을 닫으면 즐겨찾기에 있는 앱만 자기 타일 쪽으로 줄어들며 닫힙니다. 다른 앱은 화면 아래쪽으로 줄어듭니다.
 - 문자 검색은 RCS 채팅과 카카오톡 같은 메신저를 찾지 못합니다. 그룹 MMS는 1:1 대화로 열립니다.
 - 위젯을 추가할 때 시스템이 "위젯 만들기 허용" 확인창을 띄웁니다. 서드파티 런처는 이 확인 없이 위젯을 붙일 수 없습니다.
-- Titan 2 실기기에서는 아직 확인하지 못했습니다. 에뮬레이터와 Motorola edge 70(Android 16)에서 확인했습니다.
+- Unihertz Titan 2 Elite, Motorola edge 70(Android 16), 에뮬레이터에서 확인했습니다.
 
 홈이 계속 꺼지는 등 문제가 생겼을 때 원래 런처로 돌아가는 방법은 [docs/RECOVERY.md](docs/RECOVERY.md)에 있습니다.
 
@@ -132,11 +132,11 @@ Android 13 이상에서 알림 접근이나 접근성 서비스를 켜려고 할
 ## English
 
 A home launcher for Android phones with a physical QWERTY keyboard. Like macOS Spotlight, you press a shortcut to
-open a search box, type, and press Enter. Launching apps, math, unit and currency conversion, SMS search and web
+open a search box, type, and press Enter. Launching apps, math, unit and currency conversion, SMS and contact search and web
 search all happen in that one box.
 
 It also works with touch on phones without a keyboard, and lays itself out for both 1:1 square screens (like the
-Titan 2) and regular phone screens. It is a personal project that is still being polished, and every feature is free.
+Titan 2) and regular phone screens. Every feature is free.
 
 ### Features
 
@@ -146,6 +146,7 @@ Search
 - Math like `1234*56` and units like `3kg to lb` are answered as you type.
 - Currency: `100usd`, `$100`, `100usd to krw`. KRW, USD, JPY and 12 more currencies, with a base currency you choose. Off by default; turn it on in settings.
 - Optional SMS body search that opens the matching conversation.
+- Optional contact search by name (Korean initial consonants too) or number, opening the person in your contacts app.
 - Google and Play Store search rows sit at the bottom of the results. With no match, Enter goes straight to Google.
 - Keep the search box at the top or bottom of the screen. An empty search box closes on the second Backspace.
 
@@ -194,7 +195,7 @@ SMS, contacts, notifications and key presses are used only on the device, and th
 
 | Permission | Used for |
 |---|---|
-| Read SMS, read contacts | SMS body search and sender names. Read only while searching, never stored. |
+| Read SMS, read contacts | SMS body search, sender names and contact search by name or number. Read only while searching, never stored. Picking a contact only opens your contacts app; it never places a call. |
 | Notification access | Unread dots on favorites. It only looks at which apps have notifications. |
 | Accessibility service | Catching the search shortcut over other apps. Key presses are only compared with your shortcut, never stored or sent, and screen content is never read. It works only after you turn it on in settings. |
 | Internet | Downloading the exchange rate table. Only when currency conversion is on, about once a day, to one fixed address. Nothing you type is sent. |
@@ -210,7 +211,7 @@ The app's full source is not published. This repository holds the code that hand
 
 | What to check | Code |
 |---|---|
-| How SMS and contacts are read, and that they are not stored | [`provider-sms/`](provider-sms), [`SmsSearchProvider.kt`](app/src/github/java/io/github/wuugi/qsearch/search/providers/SmsSearchProvider.kt) |
+| How SMS and contacts are read, and that they are not stored | [`provider-sms/`](provider-sms), [`SmsSearchProvider.kt`](app/src/github/java/io/github/wuugi/qsearch/search/providers/SmsSearchProvider.kt), [`ContactsSearchProvider.kt`](app/src/github/java/io/github/wuugi/qsearch/search/providers/ContactsSearchProvider.kt) |
 | That the only network use is the exchange rate request | [`provider-fx/`](provider-fx), [`FxRepository.kt`](app/src/main/java/io/github/wuugi/qsearch/data/fx/FxRepository.kt) |
 | What is read from notifications | [`UnreadDotListenerService.kt`](app/src/main/java/io/github/wuugi/qsearch/notification/UnreadDotListenerService.kt) |
 | What the accessibility service does with key presses | [`paid/.../global/`](paid/src/main/kotlin/io/github/wuugi/qsearch/global), [service declaration](paid/src/main/res/xml) |
@@ -221,10 +222,11 @@ This repository cannot build the app on its own. You can check the real permissi
 
 ### Known issues
 
+- Going home from a picture-in-picture video (YouTube, for example) looks like the home screen reloads. This comes from how Android handles third-party home apps, and the fixes tried so far haven't worked. Ideas are welcome in the issues.
 - Closing an app with the home gesture shrinks it into its tile only if the app is a favorite. Other apps shrink toward the bottom of the screen.
 - SMS search can't see RCS chats or third-party messengers. Group MMS opens as a 1:1 conversation.
 - Adding a widget shows the system "allow widget access" dialog. Third-party launchers can't bind widgets without it.
-- Not yet tested on a real Titan 2. Tested on emulators and a Motorola edge 70 (Android 16).
+- Tested on a Unihertz Titan 2 Elite, a Motorola edge 70 (Android 16) and emulators.
 
 If the launcher keeps failing and you need your old launcher back, see [docs/RECOVERY.md](docs/RECOVERY.md) (Korean).
 

@@ -17,7 +17,7 @@ GitHub 릴리스 APK가 선언하는 권한과 특수 구성요소 전부입니�
 | 권한 | 용도 | 거부하면 |
 |---|---|---|
 | `android.permission.READ_SMS` | 검색창에서 문자 본문 검색 | 문자 결과만 안 나옵니다. |
-| `android.permission.READ_CONTACTS` | 문자 결과에 번호 대신 연락처 이름 표시 | 번호로 보입니다. 연락처를 검색하거나 목록으로 보여 주는 기능은 없습니다. |
+| `android.permission.READ_CONTACTS` | 검색창에서 이름·번호로 연락처 검색, 문자 결과에 번호 대신 연락처 이름 표시 | 연락처 결과가 안 나오고 문자 결과는 번호로 보입니다. |
 | 알림 접근(`BIND_NOTIFICATION_LISTENER_SERVICE`) | 즐겨찾기의 알림 점 | 점이 안 나옵니다. 사용자가 시스템 설정에서 직접 허용해야만 켜집니다. |
 | 접근성 서비스(`BIND_ACCESSIBILITY_SERVICE`) | 다른 앱 위에서 검색 단축키 받기 | 기본으로 꺼져 있습니다. 사용자가 시스템 접근성 설정에서 직접 켜야만 동작하고, 앱이 스스로 켤 수 없습니다. |
 | 빠른 설정 타일(`BIND_QUICK_SETTINGS_TILE`) | 알림창 타일로 검색창 열기 | 타일을 알림창에 넣지 않으면 아무 일도 하지 않습니다. |
@@ -40,7 +40,8 @@ GitHub 릴리스 APK가 선언하는 권한과 특수 구성요소 전부입니�
 
 - 권한 확인과 대화 열기: [`SmsAccess.kt`](../provider-sms/src/main/java/io/github/wuugi/qsearch/sms/SmsAccess.kt)
 - 문자 조회와 연락처 이름 조회: [`SmsSearcher.kt`](../provider-sms/src/main/java/io/github/wuugi/qsearch/sms/SmsSearcher.kt), [`SmsQuery.kt`](../provider-sms/src/main/java/io/github/wuugi/qsearch/sms/SmsQuery.kt), [`SmsText.kt`](../provider-sms/src/main/java/io/github/wuugi/qsearch/sms/SmsText.kt)
-- 검색창이 이 모듈을 부르고 결과를 버리는 곳: [`SmsSearchProvider.kt`](../app/src/github/java/io/github/wuugi/qsearch/search/providers/SmsSearchProvider.kt)
+- 연락처 검색: [`ContactsSearcher.kt`](../provider-sms/src/main/java/io/github/wuugi/qsearch/sms/ContactsSearcher.kt), [`ContactsText.kt`](../provider-sms/src/main/java/io/github/wuugi/qsearch/sms/ContactsText.kt)
+- 검색창이 이 모듈을 부르고 결과를 버리는 곳: [`SmsSearchProvider.kt`](../app/src/github/java/io/github/wuugi/qsearch/search/providers/SmsSearchProvider.kt), [`ContactsSearchProvider.kt`](../app/src/github/java/io/github/wuugi/qsearch/search/providers/ContactsSearchProvider.kt)
 - 이 모듈에는 네트워크 라이브러리 의존성이 없습니다: [`provider-sms/build.gradle.kts`](../provider-sms/build.gradle.kts)
 
 ### 읽는 것
@@ -48,9 +49,15 @@ GitHub 릴리스 APK가 선언하는 권한과 특수 구성요소 전부입니�
 - SMS 본문, 상대 번호, 날짜
 - MMS의 텍스트 부분, 상대 번호, 날짜
 - 화면에 보이는 결과(최대 5건)의 번호에 해당하는 연락처 이름. `READ_CONTACTS`가 있을 때만 읽습니다.
+- 연락처 검색: 연락처 이름, 전화번호, 연락처 앱에서 그 사람을 여는 데 쓰는 연락처 키. `READ_CONTACTS`가 있을 때만 읽습니다.
 
-검색어가 2글자 이상일 때 시스템 문자 저장소를 직접 조회합니다. 따로 복사본이나 색인을 만들지 않습니다.
+문자는 검색어가 2글자 이상일 때 시스템 문자 저장소를 직접 조회합니다. 연락처는 검색어를 칠 때마다(이름은 1글자부터, 번호는 숫자 3개부터)
+시스템 연락처 저장소를 직접 훑고, 맞는 사람 최대 5명만 화면에 남깁니다. 어느 쪽도 따로 복사본이나 색인을 만들지 않습니다.
 결과는 메모리에만 있고, 검색창을 닫으면 5초 안에 버립니다.
+
+### 연락처를 고르면
+
+연락처 앱에서 그 사람을 엽니다. 전화를 걸지 않고, 전화 권한도 없습니다.
 
 ### 저장하지 않는 것
 
@@ -67,6 +74,10 @@ Android 13 이상에서는 민감한 내용으로 표시해서 미리보기에 �
 - 앱을 처음 열 때는 묻지 않습니다. 검색 결과에서 "문자 검색 켜기"를 고를 때만 시스템 창이 뜹니다.
 - 거부하면 다시 묻지 않고 그 항목도 사라집니다. 나중에 설정 → 권한 → "문자 읽기"에서 다시 켤 수 있습니다.
 - 설정의 "문자 메시지" 스위치는 검색에 포함할지만 정합니다. 권한과는 별개입니다.
+- 연락처도 같습니다. 검색 결과에서 "연락처 검색 켜기"를 고를 때만 시스템 창이 뜨고, 거부하면 다시 묻지 않습니다.
+  나중에 설정 → 권한 → "연락처 읽기"에서 다시 켤 수 있고, 설정의 "연락처" 스위치는 검색에 포함할지만 정합니다.
+- 업데이트 안내: 예전에 문자 결과의 이름 표시를 위해 연락처 권한을 허용했다면, 업데이트 뒤 바로 연락처 결과가 나옵니다.
+  원하지 않으면 설정의 "연락처" 스위치를 끄거나 권한을 거두면 됩니다.
 
 ### 찾지 못하는 것
 
@@ -140,4 +151,4 @@ aapt dump xmltree QSearchLauncher-<버전>.apk AndroidManifest.xml
 ## Play 스토어 빌드
 
 Google Play는 `READ_SMS`를 기본 문자 앱, 전화 앱, 어시스턴트에만 허용합니다. 이 앱은 그 어디에도 해당하지 않아서
-Play 빌드를 내게 되면 문자 검색과 문자·연락처 권한을 빼고 만듭니다. 아직 출시하지 않았습니다.
+Play 빌드를 내게 되면 문자·연락처 검색과 문자·연락처 권한을 빼고 만듭니다. 아직 출시하지 않았습니다.
