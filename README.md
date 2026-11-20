@@ -28,6 +28,9 @@ macOS Spotlight처럼 단축키로 검색창을 열고, 글자를 치고, Enter�
 - 문자 본문을 찾아서 그 대화로 바로 갑니다. 권한을 줘야 하는 선택 기능입니다.
 - 이름(초성 포함)이나 번호로 연락처를 찾아 연락처 앱에서 엽니다. 권한을 줘야 하는 선택 기능입니다.
 - 결과 맨 아래에 Google과 Play 스토어 검색이 노출됩니다. 일치하는 결과가 없으면 Enter를 눌렀을 때 바로 Google에서 검색합니다.
+- `!` 다음에 글을 치고 Enter를 누르면 메모, `_`는 할 일로 기기에만 저장됩니다. `!`나 `_`만 치면 저장한 목록이 바로 나오고, 이어서 치면 새로 쓰거나 찾습니다. 할 일은 Enter나 터치로 완료하고, 메모는 Enter로 열어 고치거나 복사합니다. 설정에서 접두어를 끌 수 있습니다.
+- 메모와 할 일은 Shift+Backspace를 두 번 누르거나 행을 오른쪽으로 밀어 지웁니다. 밀어서 지웠으면 잠깐 뜨는 "되돌리기"를 눌러 되살릴 수 있습니다.
+- 검색창에서 `@`로 답장할 수 있는 최근 알림(카카오톡, Google 메시지 등)을 고릅니다. Enter를 누르면 작성한 답장이 해당 알림의 앱으로 전달되고, 그 알림은 알림창에서 지워집니다. 검색창 답장은 기본 꺼짐이며, 설정의 스위치와 시스템 알림 접근 권한이 모두 필요합니다. 스위치 값은 파일 백업에서 복원할 수 있습니다.
 - 검색창은 화면 위나 아래에 둘 수 있습니다. 빈 검색창은 백스페이스를 두 번 눌러야 닫힙니다. (종료에 대한 안내 노출은 설정에서 on off 할 수 있습니다.)
 
 홈
@@ -37,7 +40,7 @@ macOS Spotlight처럼 단축키로 검색창을 열고, 글자를 치고, Enter�
 - 읽지 않은 앱에 대한 알림을 점으로 표기합니다. (선택 권한이 필요합니다.)
 - 제스처: 배경화면만 보기, 빈 곳 두 번 탭으로 화면 잠금, 두 손가락으로 아래로 밀어 알림창 내리기.
 - 테마는 머티리얼(Android 12 이상은 시스템 색), 글래스, 클래식 쿼티 중에서 고릅니다. 아이콘 팩도 적용할 수 있습니다.
-- 즐겨찾기, 숨긴 앱, 위젯 배치, 설정을 파일 하나로 내보내고 되돌릴 수 있습니다. (위젯은 복원할 때 위젯마다 시스템 확인을 거치며, 위젯 안의 설정은 옮겨지지 않습니다.)
+- 즐겨찾기, 숨긴 앱, 메모·할 일, 위젯 배치, 설정을 파일 하나로 내보내고 되돌릴 수 있습니다. (위젯은 복원할 때 위젯마다 시스템 확인을 거치며, 위젯 안의 설정은 옮겨지지 않습니다.)
 - 화면 문구는 시스템 언어를 따릅니다. 한국어, 영어, 일본어를 지원하고 그 밖의 언어는 영어로 나옵니다.
 
 앱 서랍
@@ -73,11 +76,12 @@ Android 13 이상에서 알림 접근이나 접근성 서비스를 켜려고 할
 
 모든 권한은 선택입니다. 개발자는 사용자 데이터를 전혀 수집하지 않습니다.
 문자, 연락처, 알림, 키 입력은 기기 안에서만 쓰고, 인터넷은 환율 데이터를 받을 때만 씁니다.
+입력한 글은 저장하지 않습니다. 다만 사용자가 `!`·`_` 다음에 쓰고 Enter로 직접 저장한 메모와 할 일은 기기에만 남고, 밖으로 보내지 않습니다.
 
 | 권한 | 용도 |
 |---|---|
 | 문자, 연락처 읽기 | 문자 본문 검색, 보낸 사람 이름 표시, 이름·번호로 연락처 검색. 검색할 때만 읽고 저장하지 않습니다. 연락처를 고르면 연락처 앱을 열 뿐 전화를 걸지 않습니다. |
-| 알림 접근 | 즐겨찾기의 알림 점. 어느 앱에 알림이 있는지만 봅니다. |
+| 알림 접근 | 즐겨찾기의 알림 점에는 알림이 있는 앱만 표시합니다. 답장을 켜고 `@` 목록을 열면 알림의 보낸 사람과 본문을 메모리로 불러옵니다. 목록을 갱신할 때 다시 읽을 수 있으며, 검색창을 닫거나 백그라운드로 보내면 답장 상태가 지워집니다. 원래 알림 내용은 저장·기록·백업·복사·전송하지 않습니다. 답장을 보내면 그 알림을 알림창에서 지웁니다. |
 | 접근성 서비스 | 다른 앱 위에서 검색 단축키 받기. 키 입력을 단축키와 비교만 하고 저장하거나 보내지 않으며, 화면 내용은 읽지 않습니다. 설정에서 직접 켜야 동작합니다. |
 | 인터넷 | 환율 데이터 받기. 환율 변환을 켰을 때만, 하루 한 번, 정해진 주소 하나로 요청합니다. 입력한 내용은 보내지 않습니다. |
 | 빠른 설정 타일 | 알림창 타일로 검색창 열기 |
@@ -148,6 +152,9 @@ Search
 - Optional SMS body search that opens the matching conversation.
 - Optional contact search by name (Korean initial consonants too) or number, opening the person in your contacts app.
 - Google and Play Store search rows sit at the bottom of the results. With no match, Enter goes straight to Google.
+- Type `!` and some text, then Enter, to save a note; `_` saves a to-do. Both stay on the device. `!` or `_` alone lists what you saved right away, and typing more writes a new one or searches. Enter or a tap completes a to-do; Enter opens a note to edit or copy. The prefixes can be turned off in settings.
+- Delete a note or to-do with Shift+Backspace twice, or swipe its row to the right. After a swipe, tap the "Undo" that shows up for a moment to bring it back.
+- `@` lists recent notifications you can reply to (KakaoTalk, Google Messages and others). Pick one, type, and press Enter: the reply goes to that app and the notification is cleared. Replying from search is off by default and needs both its settings switch and system notification access. The switch is included in file backups.
 - Keep the search box at the top or bottom of the screen. An empty search box closes on the second Backspace.
 
 Home
@@ -156,7 +163,7 @@ Home
 - A dot on apps with unread notifications.
 - Gestures: wallpaper only, double-tap to lock the screen, two-finger swipe down for the notification shade.
 - Material (system colours on Android 12+), Glass and Classic QWERTY themes. Icon packs are supported.
-- Export favorites, hidden apps, the widget layout and settings to one file and restore them. (Each widget goes through a system confirmation on restore, and settings inside a widget are not carried over.)
+- Export favorites, hidden apps, notes, to-dos, the widget layout and settings to one file and restore them. (Each widget goes through a system confirmation on restore, and settings inside a widget are not carried over.)
 - The UI follows the system language: English, Korean or Japanese (anything else falls back to English).
 
 App drawer
@@ -192,11 +199,12 @@ When notification access is off, the permissions section in the app's settings s
 
 Every permission is optional. Deny one and everything else keeps working. The developer receives none of your data.
 SMS, contacts, notifications and key presses are used only on the device, and the internet is used only to download exchange rates.
+Nothing you type is stored, except the notes and to-dos you save yourself with `!` or `_` and Enter. Those stay on the device and are never sent anywhere.
 
 | Permission | Used for |
 |---|---|
 | Read SMS, read contacts | SMS body search, sender names and contact search by name or number. Read only while searching, never stored. Picking a contact only opens your contacts app; it never places a call. |
-| Notification access | Unread dots on favorites. It only looks at which apps have notifications. |
+| Notification access | Unread dots on favorites only look at which apps have notifications. With replies on, opening the `@` list reads the sender and text of those notifications into memory. Closing search or sending the launcher to the background clears that state. Notification content is never stored, logged, backed up, copied or sent. After you send a reply, that notification is cleared. |
 | Accessibility service | Catching the search shortcut over other apps. Key presses are only compared with your shortcut, never stored or sent, and screen content is never read. It works only after you turn it on in settings. |
 | Internet | Downloading the exchange rate table. Only when currency conversion is on, about once a day, to one fixed address. Nothing you type is sent. |
 | Quick Settings tile | Opening search from a notification-shade tile |

@@ -5,12 +5,19 @@ import androidx.datastore.preferences.core.Preferences
 import io.github.wuugi.qsearch.data.drawer.AppDrawerGrid
 import io.github.wuugi.qsearch.data.favorites.FavoritesGrid
 import io.github.wuugi.qsearch.data.favorites.FavoritesStore
+import io.github.wuugi.qsearch.data.notes.NotesStore
 import io.github.wuugi.qsearch.data.settings.HomeSettingsStore
 import io.github.wuugi.qsearch.data.settings.HomeTileMaterial
 import io.github.wuugi.qsearch.data.settings.SearchSettingsStore
 import io.github.wuugi.qsearch.data.settings.UnreadDotColor
 import io.github.wuugi.qsearch.data.valueOrNull
 import io.github.wuugi.qsearch.search.KeyCombo
+import io.github.wuugi.qsearch.search.command.MAX_IMPORT_ITEMS
+import io.github.wuugi.qsearch.search.command.MAX_NOTE_CHARS
+import io.github.wuugi.qsearch.search.command.MAX_TODO_CHARS
+import io.github.wuugi.qsearch.search.command.NoteCodec
+import io.github.wuugi.qsearch.search.command.NoteItem
+import io.github.wuugi.qsearch.search.command.TodoItem
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.time.LocalDate
@@ -24,7 +31,7 @@ internal data class BackupWidget(val provider: String, val heightDp: Int?)
 
 /**
  * 검증이 끝난 가져오기 계획. 저장소마다 [MutablePreferences] 에 적용할 편집(키 하나를 쓰거나 지우기)의 목록이고,
- * 사용자가 복원을 누르기 전에는 아무것도 실행되지 않는다. 세 숫자는 요약 화면이 보여 준다.
+ * 사용자가 복원을 누르기 전에는 아무것도 실행되지 않는다. 숫자들은 요약 화면이 보여 준다.
  */
 internal class RestorePlan(
     val favorites: List<(MutablePreferences) -> Unit>,
@@ -37,6 +44,12 @@ internal class RestorePlan(
     val widgets: List<List<BackupWidget>>? = null,
     /** 위젯을 준 앱이 이 폰에 없어 건너뛴 위젯 수. */
     val widgetsSkipped: Int = 0,
+    /** 메모·할 일 저장소에 적용할 편집. */
+    val notes: List<(MutablePreferences) -> Unit> = emptyList(),
+    /** 교체할 메모 수. null은 현재 목록 유지, 0은 현재 목록을 비운다는 뜻이다. */
+    val notesRestored: Int? = null,
+    /** 교체할 할 일 수. null은 현재 목록 유지, 0은 현재 목록을 비운다는 뜻이다. */
+    val todosRestored: Int? = null,
 )
 
 /**
@@ -58,8 +71,11 @@ internal object BackupCodec {
     const val FORMAT = 1
     const val MIME = "application/json"
 
-    /** 실제 파일은 몇 KB 다. 가져오기(15-03)가 이 크기를 넘는 파일을 거절한다. */
-    const val MAX_BYTES = 256 * 1024
+    /**
+     * 가져오기가 이 크기를 넘는 파일을 거절한다(사용자 결정 2026-11-19). 메모가 들어가 파일이 커진다: 2000자 한글 메모는 JSON 으로
+     * 6KB 쯤이라 650개 남짓이면 넘는다 -- 그보다 많이 쌓은 내보내기는 되돌려 읽을 수 없다(알려진 한계).
+     */
+    const val MAX_BYTES = 4 * 1024 * 1024
 
     /** 이 폰에서 값이 쓸 수 있는지 판정하는 근거. 파일을 읽는 쪽(설정 화면)이 현재 폰에서 채운다. */
     class Env(
@@ -91,7 +107,7 @@ internal object BackupCodec {
     /**
      * 파일을 읽고 **전부 검증한 뒤에야** [RestorePlan] 을 만든다(D-00d) -- 저장소는 여기서 건드리지 않는다.
      *
-     * - 앞문: 256KB 상한(제공자가 알려 준 크기를 믿지 않고 읽은 바이트를 센다), JSON 객체 하나이고 그 뒤에 아무것도 없음,
+     * - 앞문: 4MB 상한(제공자가 알려 준 크기를 믿지 않고 읽은 바이트를 센다), JSON 객체 하나이고 그 뒤에 아무것도 없음,
      *   `app` 이 [APP_ID], `format` 이 1..[FORMAT] 인 정수. 이유는 [Reject] 의 넷이다.
      * - 그룹이 없으면 그 그룹은 건드리지 않는다(D-04). 필드가 없으면 현재 값을 그대로 둔다(D-04).
      * - JSON null 은 그 키를 지운다(D-11). 기본값으로 돌아가는 것이다.
@@ -154,11 +170,13 @@ internal object BackupCodec {
         val favoritesGroup = group(BackupContract.Store.FAVORITES)
         val homeGroup = group(BackupContract.Store.HOME)
         val searchGroup = group(BackupContract.Store.SEARCH)
+        val notesGroup = group(BackupContract.Store.NOTES)
 
         val b = PlanBuilder(env)
         favoritesGroup?.let { b.favorites(it) }
         homeGroup?.let { b.home(it) }
         searchGroup?.let { b.search(it) }
+        notesGroup?.let { b.notes(it) }
         return Decoded.Ok(b.build())
     }
 
@@ -166,14 +184,21 @@ internal object BackupCodec {
         private val favoritesEdits = mutableListOf<(MutablePreferences) -> Unit>()
         private val homeEdits = mutableListOf<(MutablePreferences) -> Unit>()
         private val searchEdits = mutableListOf<(MutablePreferences) -> Unit>()
+        private val notesEdits = mutableListOf<(MutablePreferences) -> Unit>()
         private var restored = 0
         private var skipped = 0
         private var unusable = 0
 
         private var widgets: List<List<BackupWidget>>? = null
         private var widgetsSkipped = 0
+        private var notesRestored: Int? = null
+        private var todosRestored: Int? = null
 
-        fun build() = RestorePlan(favoritesEdits, homeEdits, searchEdits, restored, skipped, unusable, widgets, widgetsSkipped)
+        fun build() = RestorePlan(
+            favoritesEdits, homeEdits, searchEdits, restored, skipped, unusable, widgets, widgetsSkipped, notesEdits,
+            notesRestored = notesRestored,
+            todosRestored = todosRestored,
+        )
 
         fun favorites(g: JSONObject) {
             val name = FavoritesStore.KEY_FAVORITE_CELLS.name
@@ -264,6 +289,65 @@ internal object BackupCodec {
             scalar(g, SearchSettingsStore.KEY_FX_BASE_CURRENCY, searchEdits) { v -> (v as? String)?.takeIf { it in env.currencyCodes } }
             scalar(g, SearchSettingsStore.KEY_FX_ENABLED, searchEdits) { it as? Boolean }
             scalar(g, SearchSettingsStore.KEY_GLOBAL_SHORTCUT_WANTED, searchEdits) { it as? Boolean }
+            scalar(g, SearchSettingsStore.KEY_COMMAND_PREFIX_ENABLED, searchEdits) { it as? Boolean }
+            scalar(g, SearchSettingsStore.KEY_REPLY_ENABLED, searchEdits) { it as? Boolean }
+        }
+
+        fun notes(g: JSONObject) {
+            val beforeNotes = notesEdits.size
+            val keptNotes = items(g, NotesStore.KEY_NOTE_ITEMS) { o, id, createdAt ->
+                val text = (o.opt("text") as? String)?.takeIf { it.isNotBlank() && it.length <= MAX_NOTE_CHARS }
+                text?.let { NoteItem(id, it, createdAt) }
+            }
+            keptNotes?.let {
+                val raw = NoteCodec.encodeNotes(it)
+                notesEdits += { prefs -> prefs[NotesStore.KEY_NOTE_ITEMS] = raw }
+            }
+            if (notesEdits.size > beforeNotes) notesRestored = keptNotes?.size ?: 0
+
+            val beforeTodos = notesEdits.size
+            val keptTodos = items(g, NotesStore.KEY_TODO_ITEMS) { o, id, createdAt ->
+                val text = (o.opt("text") as? String)?.takeIf { it.isNotBlank() && it.length <= MAX_TODO_CHARS }
+                val done = o.opt("done") as? Boolean
+                if (text == null || done == null) null else TodoItem(id, text, createdAt, done)
+            }
+            keptTodos?.let {
+                val raw = NoteCodec.encodeTodos(it)
+                notesEdits += { prefs -> prefs[NotesStore.KEY_TODO_ITEMS] = raw }
+            }
+            if (notesEdits.size > beforeTodos) todosRestored = keptTodos?.size ?: 0
+        }
+
+        /**
+         * 메모/할 일 배열 하나. 없으면 null(현재 값 유지), JSON null 이면 키를 지우는 편집을 더하고 null, 쓸 수 있는 원소가 하나도 없으면 null,
+         * 아니면 살린 원소. id·createdAt 검증과 중복 id·개수 상한은 여기서, 글자 검증은 [build] 람다가 맡는다. 글자를 자르지 않는다.
+         */
+        private fun <T> items(
+            g: JSONObject,
+            key: Preferences.Key<String>,
+            build: (JSONObject, String, Long) -> T?,
+        ): List<T>? {
+            if (!g.has(key.name)) return null
+            val v = g.opt(key.name)
+            if (v === JSONObject.NULL) {
+                notesEdits += { it.remove(key) }
+                return null
+            }
+            val array = v as? JSONArray ?: run { unusable++; return null }
+            val kept = ArrayList<T>()
+            val seenIds = HashSet<String>()
+            for (i in 0 until array.length()) {
+                val o = array.opt(i) as? JSONObject
+                val id = (o?.opt("id") as? String)?.takeIf { it.isNotEmpty() }
+                val c = o?.opt("createdAt")
+                val createdAt = if (c is Int || c is Long) (c as Number).toLong().takeIf { it > 0 } else null
+                val item = if (i >= MAX_IMPORT_ITEMS || o == null || id == null || createdAt == null || id in seenIds) null else build(o, id, createdAt)
+                if (item == null || id == null) unusable++ else { seenIds += id; kept += item }
+            }
+            // 빈 배열은 비우는 뜻이고, 원소가 있는데 하나도 못 살리면 현재 목록을 둔다(favorites 와 같은 규칙).
+            if (kept.isEmpty() && array.length() > 0) return null
+            if (kept.isEmpty()) notesEdits += { it[key] = "[]" }
+            return kept.takeIf { it.isNotEmpty() }
         }
 
         /** 없으면 그대로, null 이면 지우고, [accept] 가 받아들인 값이면 쓰고, 아니면 건너뛰며 센다. 형 변환은 없다. */
@@ -322,7 +406,13 @@ internal object BackupCodec {
     fun fileName(date: LocalDate): String = "qsearch-backup-$date.json"
 
     /** [widgetProvider] 는 위젯 번호의 제공자 `패키지/클래스` 이름(번호는 파일에 넣지 않는다). 찾지 못하는 번호는 뺀다. */
-    fun encode(favorites: Preferences, home: Preferences, search: Preferences, widgetProvider: (Int) -> String?): String = JSONObject().apply {
+    fun encode(
+        favorites: Preferences,
+        home: Preferences,
+        search: Preferences,
+        notes: Preferences,
+        widgetProvider: (Int) -> String?,
+    ): String = JSONObject().apply {
         put("app", APP_ID)
         put("format", FORMAT)
         put(BackupContract.Store.FAVORITES.file, JSONObject().apply {
@@ -359,6 +449,21 @@ internal object BackupCodec {
             scalar(search, SearchSettingsStore.KEY_FX_BASE_CURRENCY)
             scalar(search, SearchSettingsStore.KEY_FX_ENABLED)
             scalar(search, SearchSettingsStore.KEY_GLOBAL_SHORTCUT_WANTED)
+            scalar(search, SearchSettingsStore.KEY_COMMAND_PREFIX_ENABLED)
+            scalar(search, SearchSettingsStore.KEY_REPLY_ENABLED)
+        })
+        put(BackupContract.Store.NOTES.file, JSONObject().apply {
+            // 안 쓴 목록은 null 이 아니라 빈 배열이다(favorite_cells 와 같다).
+            put(NotesStore.KEY_NOTE_ITEMS.name, JSONArray().also { a ->
+                NoteCodec.decodeNotes(notes.valueOrNull(NotesStore.KEY_NOTE_ITEMS)).forEach {
+                    a.put(JSONObject().put("id", it.id).put("text", it.text).put("createdAt", it.createdAt))
+                }
+            })
+            put(NotesStore.KEY_TODO_ITEMS.name, JSONArray().also { a ->
+                NoteCodec.decodeTodos(notes.valueOrNull(NotesStore.KEY_TODO_ITEMS)).forEach {
+                    a.put(JSONObject().put("id", it.id).put("text", it.text).put("createdAt", it.createdAt).put("done", it.done))
+                }
+            })
         })
     }.toString(2)
 

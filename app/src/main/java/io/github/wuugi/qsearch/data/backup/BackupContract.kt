@@ -3,6 +3,7 @@ package io.github.wuugi.qsearch.data.backup
 import io.github.wuugi.qsearch.data.favorites.FavoritesStore
 import io.github.wuugi.qsearch.data.favorites.UsageStore
 import io.github.wuugi.qsearch.data.fx.FxRepository
+import io.github.wuugi.qsearch.data.notes.NotesStore
 import io.github.wuugi.qsearch.data.settings.HomeSettingsStore
 import io.github.wuugi.qsearch.data.settings.SearchSettingsStore
 
@@ -26,6 +27,7 @@ object BackupContract {
     /** 저장소 파일 이름. DataStore 파일과 SharedPreferences 파일을 모두 센다. */
     enum class Store(val file: String) {
         FAVORITES("favorites"),
+        NOTES("notes"),
         HOME("home_settings"),
         SEARCH("search_settings"),
         USAGE("usage"),
@@ -39,6 +41,10 @@ object BackupContract {
     val included: Map<Store, Set<String>> = mapOf(
         Store.FAVORITES to setOf(
             FavoritesStore.KEY_FAVORITE_CELLS.name,
+        ),
+        Store.NOTES to setOf(
+            NotesStore.KEY_NOTE_ITEMS.name,
+            NotesStore.KEY_TODO_ITEMS.name,
         ),
         Store.HOME to setOf(
             HomeSettingsStore.KEY_SHOW_UNREAD_DOT.name,
@@ -63,6 +69,8 @@ object BackupContract {
             SearchSettingsStore.KEY_FX_BASE_CURRENCY.name,
             SearchSettingsStore.KEY_FX_ENABLED.name,
             SearchSettingsStore.KEY_GLOBAL_SHORTCUT_WANTED.name,
+            SearchSettingsStore.KEY_COMMAND_PREFIX_ENABLED.name,
+            SearchSettingsStore.KEY_REPLY_ENABLED.name,
         ),
         Store.USAGE to emptySet(),
         Store.FX_RATES to emptySet(),
@@ -73,6 +81,7 @@ object BackupContract {
         Store.FAVORITES to mapOf(
             FavoritesStore.KEY_FAVORITE_IDS.name to Why.LEGACY,
         ),
+        Store.NOTES to emptyMap(),
         Store.HOME to mapOf(
             HomeSettingsStore.KEY_NOTIFICATION_PROMPT_TAPPED.name to Why.PERMISSION_STATE,
             HomeSettingsStore.KEY_ONBOARDING_SEEN.name to Why.ONBOARDING_STATE,
